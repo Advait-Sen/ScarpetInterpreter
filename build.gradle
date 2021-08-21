@@ -15,6 +15,10 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 }
 
+ext {
+    mainClassName = 'adsen.scarpet.interpreter.ScarpetInterpreterJave'
+}
+
 test {
     useJUnitPlatform()
 }
