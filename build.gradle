@@ -24,7 +24,7 @@ tasks.withType(JavaCompile) {
 
 application {
     mainModule = 'adsen.scarpet.interpreter'
-    mainClass = 'adsen.scarpet.interpreter.HelloApplication'
+    mainClass = 'adsen.scarpet.interpreter.ScarpetInterpreterJava'
 }
 
 javafx {
