@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.Button?>
 <VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
       fx:controller="adsen.scarpet.interpreter.ScarpetApplicationController">
@@ -11,6 +12,8 @@
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
     </padding>
 
-    <Label fx:id="welcomeText"/>
-    <Button text="Hello!" onAction="#onHelloButtonClick"/>
+    <Label text="Welcome to Scarpet Application!"/>
+    <TextArea fx:id="scriptInputArea"/>
+    <Button text="Input script" onAction="#onScriptInput"/>
+    <TextArea fx:id="scriptOutputArea" editable="false"/>
 </VBox>

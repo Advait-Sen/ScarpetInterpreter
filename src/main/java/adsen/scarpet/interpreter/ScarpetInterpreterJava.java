@@ -14,33 +14,17 @@ import java.util.Scanner;
 public class ScarpetInterpreterJava extends Application {
     public static ScarpetScriptServer scriptServer;
 
+    public static void main(String[] args) {
+        launch();
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(ScarpetInterpreterJava.class.getResource("scarpet-screen.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
-        stage.setTitle("Hello!");
+
+        stage.setTitle("Scarpet Interpreter");
         stage.setScene(scene);
         stage.show();
-    }
-
-    public static void main(String[] args) {
-        System.out.println("Started Scarpet Interpreter");
-
-        Scanner scanner = new Scanner(System.in);
-        String input = scanner.nextLine();
-
-        while (!input.equalsIgnoreCase("end")) {
-            try {
-                new Expression(input).displayOutput();
-            } catch (ExpressionException e) {
-                System.out.println(e.getMessage());
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-            input = scanner.nextLine();
-        }
-
-        System.out.println("Finished interpreting");
-        launch();
     }
 }

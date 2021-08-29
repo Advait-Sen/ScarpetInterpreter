@@ -49,7 +49,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class Expression implements Cloneable {
-    static Expression none = new Expression("null");
+    static Expression none = new Expression();
     /**
      * The function used to print, must accept a string, and can be use to display results however you want.
      * By default set to {@link System#out#println(String)}, so it prints to command line, but can be set to whatever you want.
@@ -70,13 +70,27 @@ public class Expression implements Cloneable {
      */
     private LazyValue ast = null;
 
+    private boolean allowComments;
+    private boolean allowNewLineMarkers;
+
+    public Expression(){
+        this("null", false, true);
+    }
+
+    public Expression(String input){
+        this(input, false, true);
+    }
+
     /**
      * @param expression .
      */
-    public Expression(String expression) {
+    public Expression(String expression, boolean comments, boolean newLineMarkers) {
         this.expression = expression.trim().
                 replaceAll("\\r\\n?", "\n").
                 replaceAll(";+$", "");
+
+        allowComments = comments;
+        allowNewLineMarkers = newLineMarkers;
 
         FunctionsAndControlFlow.apply(this);
         Operators.apply(this);
@@ -137,15 +151,6 @@ public class Expression implements Cloneable {
      */
     public static void print(String s) {
         printFunction.accept(s);
-    }
-
-    /**
-     * Allows to set the printer function which scarpet will use to display its output to.
-     *
-     * @param printerFunction A function which takes one String input (and essentially presents it to the user however you want)
-     */
-    public static void setPrintFunction(Consumer<String> printerFunction) {
-        printFunction = printerFunction;
     }
 
     static Value evalValue(Supplier<LazyValue> exprProvider, Context c, Integer expectedType) {
@@ -392,7 +397,7 @@ public class Expression implements Cloneable {
         List<Tokenizer.Token> outputQueue = new ArrayList<>();
         Stack<Tokenizer.Token> stack = new Stack<>();
 
-        Tokenizer tokenizer = new Tokenizer(this, expression, false, true);
+        Tokenizer tokenizer = new Tokenizer(this, expression, allowComments, allowNewLineMarkers);
 
         Tokenizer.Token lastFunction = null;
         Tokenizer.Token previousToken = null;
@@ -526,13 +531,21 @@ public class Expression implements Cloneable {
         }
     }
 
-    public void displayOutput() {//Displays the output, i.e the finally evaluated expression.
+
+    /**
+     * Runs the script and displays the output.
+     * You can then set the printer function which scarpet will use to display its output to.
+     *
+     * @param printerFunction A function which takes one String input (and essentially presents it to the user however you want)
+     */
+    public void displayOutput(Consumer<String> printerFunction) {//Displays the output, i.e the finally evaluated expression.
+        printFunction = printerFunction;
         try {
             printFunction.accept(eval(Context.simpleParse()).getString());
         } catch (ExpressionException e) {
-            throw new ScarpetExpressionException(e.getMessage());
+            printFunction.accept(e.getMessage());
         } catch (ArithmeticException ae) {
-            throw new ScarpetExpressionException("math doesn't compute... " + ae.getMessage());
+            printFunction.accept("math doesn't compute... " + ae.getMessage());
         }
     }
 
