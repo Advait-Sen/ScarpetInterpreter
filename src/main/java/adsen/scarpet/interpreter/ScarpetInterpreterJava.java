@@ -1,15 +1,12 @@
 package adsen.scarpet.interpreter;
 
-import adsen.scarpet.interpreter.parser.Expression;
 import adsen.scarpet.interpreter.parser.ScarpetScriptServer;
-import adsen.scarpet.interpreter.parser.exception.ExpressionException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Scanner;
 
 public class ScarpetInterpreterJava extends Application {
     public static ScarpetScriptServer scriptServer;
