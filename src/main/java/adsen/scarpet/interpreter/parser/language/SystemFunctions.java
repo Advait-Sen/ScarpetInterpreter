@@ -21,8 +21,8 @@ public class SystemFunctions {
     // %[argument_index$][flags][width][.precision][t]conversion
     private static final Pattern formatPattern = Pattern.compile("%(\\d+\\$)?([-#+ 0,(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])");
 
-    public static void apply(Expression expression){
-        expression.addUnaryFunction("print", v-> {
+    public static void apply(Expression expression) {
+        expression.addUnaryFunction("print", v -> {
             String s = v.getString();
             Expression.print(s);
             return StringValue.of(s);
@@ -46,8 +46,7 @@ public class SystemFunctions {
                 return Value.NULL;
             return new NumericValue(v.readNumber());
         });
-        expression.addFunction("str", lv ->
-        {
+        expression.addFunction("str", lv -> {
             if (lv.size() == 0)
                 throw new InternalExpressionException("str requires at least one argument");
             String format = lv.get(0).getString();

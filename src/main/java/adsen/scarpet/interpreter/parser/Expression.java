@@ -541,7 +541,7 @@ public class Expression implements Cloneable {
     public void displayOutput(Consumer<String> printerFunction) {//Displays the output, i.e the finally evaluated expression.
         printFunction = printerFunction;
         try {
-            printFunction.accept(eval(Context.simpleParse()).getString());
+            printFunction.accept(eval(new Context("application window")).getString());
         } catch (ExpressionException e) {
             printFunction.accept(e.getMessage());
         } catch (ArithmeticException ae) {
