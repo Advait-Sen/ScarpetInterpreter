@@ -27,10 +27,11 @@ public class Operators {
         put("shift<<>>", 9);
         put("equal==!=", 8);
         put("bit-and&", 7);
-        put("bit-xor^", 5);
-        put("bit-or|", 4);
-        put("and&&", 3);
-        put("or||", 2);
+        put("bit-xor^", 6);
+        put("bit-or|", 5);
+        put("and&&", 4);
+        put("or||", 3);
+        put("assign=<>", 2);
         put("def->", 1);
         put("nextop;", 0);
     }};
