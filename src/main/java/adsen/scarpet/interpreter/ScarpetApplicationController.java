@@ -1,9 +1,7 @@
 package adsen.scarpet.interpreter;
 
 import adsen.scarpet.interpreter.parser.Expression;
-import adsen.scarpet.interpreter.parser.exception.ExpressionException;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 
 public class ScarpetApplicationController {
@@ -17,11 +15,10 @@ public class ScarpetApplicationController {
         scriptOutputArea.clear();
         String script = scriptInputArea.getText();
         try {
-            new Expression(script, true, false).displayOutput(scriptOutputArea::appendText);
-        } catch (ExpressionException e) {
-            System.out.println(e.getMessage());
-        } catch (Throwable t) {
-            t.printStackTrace();
+            new Expression(script, true, false).displayOutput(s -> scriptOutputArea.appendText(s + '\n'));
+        } catch (Throwable e) {
+            scriptOutputArea.appendText(e.getMessage());
         }
+        scriptOutputArea.appendText("Finished interpreting!");
     }
 }

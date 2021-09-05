@@ -24,7 +24,7 @@ public class SystemFunctions {
     public static void apply(Expression expression) {
         expression.addUnaryFunction("print", v -> {
             String s = v.getString();
-            Expression.print(s);
+            expression.print(s);
             return StringValue.of(s);
         });
         expression.addLazyFunction("bool", 1, (c, t, lv) -> {
@@ -122,11 +122,6 @@ public class SystemFunctions {
             return (cc, tt) -> retval;
         });
 
-        expression.addUnaryFunction("print", (v) ->
-        {
-            System.out.println(v.getString());
-            return v; // pass through for variables
-        });
         expression.addUnaryFunction("sleep", (v) ->
         {
             long time = NumericValue.asNumber(v).getLong();
@@ -137,9 +132,10 @@ public class SystemFunctions {
             }
             return v; // pass through for variables
         });
+
         expression.addLazyFunction("time", 0, (c, t, lv) ->
         {
-            Value time = new NumericValue((System.nanoTime() / 1000) / 1000.0);
+            Value time = new NumericValue((System.nanoTime() * 1000) / 1000.0);
             return (cc, tt) -> time;
         });
 
@@ -170,7 +166,6 @@ public class SystemFunctions {
             }
             return (cc, tt) -> Value.NULL;
         });
-
 
         expression.addLazyFunction("vars", 1, (c, t, lv) -> {
             String prefix = lv.get(0).evalValue(c).getString();

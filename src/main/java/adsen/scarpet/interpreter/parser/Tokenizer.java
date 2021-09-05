@@ -124,17 +124,34 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
             ch = input.charAt(pos);
             while (ch != '\'') {
                 if (ch == '\\') {
-                    pos++;
+                    char nextChar = peekNextChar();
+                    if (nextChar == 'n') {
+                        token.append('\n');
+                    } else if (nextChar == 't') {
+                        token.append('\t');
+                    } else if (nextChar == 'r') {
+                        throw new ExpressionException(this.expression, token,
+                                "Carriage return character is not supported");
+                        //token.append('\r');
+                    } else if (nextChar == '\\' || nextChar == '\'') {
+                        token.append(nextChar);
+                    } else {
+                        pos--;
+                        linePos--;
+                    }
+                    pos += 2;
+                    linePos += 2;
+                } else {
+                    token.append(input.charAt(pos++));
                     linePos++;
-                    if (pos == input.length()) {
-                        token.type = Token.TokenType.STRING;
-                        if (expression != null)
-                            throw new ExpressionException(this.expression, token, "Program truncated");
+                    if (ch == '\n') {
+                        lineNo++;
+                        linePos = 0;
                     }
                 }
-                token.append(input.charAt(pos++));
-                linePos++;
-                ch = pos == input.length() ? 0 : input.charAt(pos);
+                if (pos == input.length() && expression != null)
+                    throw new ExpressionException(this.expression, token, "Program truncated");
+                ch = input.charAt(pos);
             }
             pos++;
             linePos++;

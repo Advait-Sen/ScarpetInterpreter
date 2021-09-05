@@ -14,25 +14,20 @@ import adsen.scarpet.interpreter.parser.exception.ExitStatement;
 import adsen.scarpet.interpreter.parser.exception.ExpressionException;
 import adsen.scarpet.interpreter.parser.exception.InternalExpressionException;
 import adsen.scarpet.interpreter.parser.exception.ReturnStatement;
-import adsen.scarpet.interpreter.parser.exception.ScarpetExpressionException;
 import adsen.scarpet.interpreter.parser.exception.ThrowStatement;
 import adsen.scarpet.interpreter.parser.language.Arithmetic;
 import adsen.scarpet.interpreter.parser.language.FunctionsAndControlFlow;
 import adsen.scarpet.interpreter.parser.language.LoopsAndHigherOrderFunctions;
 import adsen.scarpet.interpreter.parser.language.Operators;
 import adsen.scarpet.interpreter.parser.language.SystemFunctions;
-import adsen.scarpet.interpreter.parser.value.LazyListValue;
-import adsen.scarpet.interpreter.parser.value.ListValue;
 import adsen.scarpet.interpreter.parser.value.NumericValue;
 import adsen.scarpet.interpreter.parser.value.StringValue;
 import adsen.scarpet.interpreter.parser.value.Value;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,9 +37,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -70,11 +63,11 @@ public class Expression implements Cloneable {
      */
     private LazyValue ast = null;
 
-    private boolean allowComments;
-    private boolean allowNewLineMarkers;
+    private final boolean allowComments;
+    private final boolean allowNewLineMarkers;
 
     public Expression(){
-        this("null", false, true);
+        this("null");
     }
 
     public Expression(String input){
@@ -82,7 +75,7 @@ public class Expression implements Cloneable {
     }
 
     /**
-     * @param expression .
+     * @param expression The String expression (i.e the code)
      */
     public Expression(String expression, boolean comments, boolean newLineMarkers) {
         this.expression = expression.trim().
@@ -149,7 +142,7 @@ public class Expression implements Cloneable {
      *
      * @param s The string to display to the user.
      */
-    public static void print(String s) {
+    public void print(String s) {
         printFunction.accept(s);
     }
 
@@ -545,19 +538,15 @@ public class Expression implements Cloneable {
         } catch (ExpressionException e) {
             printFunction.accept(e.getMessage());
         } catch (ArithmeticException ae) {
-            printFunction.accept("math doesn't compute... " + ae.getMessage());
+            printFunction.accept("Your math doesn't compute... " + ae.getMessage());
         }
     }
 
     Value eval(Context c) {
-        return eval(c, Context.NONE);
-    }
-
-    private Value eval(Context c, Integer expectedType) {
         if (ast == null) {
             ast = getAST();
         }
-        return evalValue(() -> ast, c, expectedType);
+        return evalValue(() -> ast, c, Context.NONE);
     }
 
     private LazyValue getAST() {
