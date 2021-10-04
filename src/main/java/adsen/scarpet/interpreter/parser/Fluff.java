@@ -31,7 +31,7 @@ public abstract class Fluff {
     public interface ILazyFunction {
         int getNumParams();
 
-        boolean numParamsVaries();
+        boolean numParamsFixed();
 
         LazyValue lazyEval(Context c, Integer type, Expression expr, Tokenizer.Token token, List<LazyValue> lazyParams);
         // lazy function has a chance to change execution based on context
@@ -70,8 +70,8 @@ public abstract class Fluff {
             return numParams;
         }
 
-        public boolean numParamsVaries() {
-            return numParams < 0;
+        public boolean numParamsFixed() {
+            return numParams >= 0;
         }
     }
 

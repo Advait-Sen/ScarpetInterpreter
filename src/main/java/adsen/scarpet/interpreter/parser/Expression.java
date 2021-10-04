@@ -582,7 +582,7 @@ public class Expression implements Cloneable {
                     boolean isKnown = functions.containsKey(name); // globals will be evaluated lazily, not at compile time via .
                     if (isKnown) {
                         f = functions.get(name);
-                        p = new ArrayList<>(!f.numParamsVaries() ? f.getNumParams() : 0);
+                        p = new ArrayList<>(f.numParamsFixed() ? f.getNumParams() : 0);
                     } else // potentially unknown function or just unknown function
                     {
                         f = functions.get(".");
@@ -650,7 +650,7 @@ public class Expression implements Cloneable {
                 case FUNCTION:
                     ILazyFunction f = functions.get(token.surface.toLowerCase(Locale.ROOT));// don't validate global - userdef functions
                     int numParams = stack.pop();
-                    if (f != null && !f.numParamsVaries() && numParams != f.getNumParams()) {
+                    if (f != null && f.numParamsFixed() && numParams != f.getNumParams()) {
                         throw new ExpressionException(this, token, "Function " + token + " expected " + f.getNumParams() + " parameters, got " + numParams);
                     }
                     if (stack.size() <= 0) {
