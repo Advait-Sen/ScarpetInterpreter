@@ -80,7 +80,9 @@ public class Expression implements Cloneable {
     public Expression(String expression, boolean comments, boolean newLineMarkers) {
         this.expression = expression.trim().
                 replaceAll("\\r\\n?", "\n").
-                replaceAll(";+$", "");
+                replaceAll(";+$", "").
+                replaceAll("\\{", "m(").
+                replaceAll("\\[", "l(");
 
         allowComments = comments;
         allowNewLineMarkers = newLineMarkers;
