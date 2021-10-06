@@ -138,18 +138,20 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
 
         boolean isHex = false;
 
-        if (Character.isDigit(ch) || (ch == decimalSeparator && Character.isDigit(peekNextChar()))) {
+        if (Character.isDigit(ch)) {// || (ch == decimalSeparator && Character.isDigit(peekNextChar())))
+            // decided to no support this notation to favour element access via . operator
+
             if (ch == '0' && (peekNextChar() == 'x' || peekNextChar() == 'X'))
                 isHex = true;
             while ((isHex && isHexDigit(ch)) ||
                     (Character.isDigit(ch) || ch == decimalSeparator || ch == 'e' || ch == 'E'
-                    || (ch == minusSign && token.length() > 0
-                    && ('e' == token.charAt(token.length() - 1)
-                    || 'E' == token.charAt(token.length() - 1)))
-                    || (ch == '+' && token.length() > 0
-                    && ('e' == token.charAt(token.length() - 1)
-                    || 'E' == token.charAt(token.length() - 1))))
-                    && (pos < input.length())) {
+                            || (ch == minusSign && token.length() > 0
+                            && ('e' == token.charAt(token.length() - 1)
+                            || 'E' == token.charAt(token.length() - 1)))
+                            || (ch == '+' && token.length() > 0
+                            && ('e' == token.charAt(token.length() - 1)
+                            || 'E' == token.charAt(token.length() - 1))))
+                            && (pos < input.length())) {
                 token.append(input.charAt(pos++));
                 linePos++;
                 ch = pos == input.length() ? 0 : input.charAt(pos);
@@ -158,11 +160,9 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
         } else if (ch == '\'') {
             pos++;
             linePos++;
-            if (pos == input.length()) {
-                token.type = Token.TokenType.STRING;
-                if (expression != null)
-                    throw new ExpressionException(this.expression, token, "Program truncated");
-            }
+            token.type = Token.TokenType.STRING;
+            if (pos == input.length() && expression != null)
+                throw new ExpressionException(this.expression, token, "Program truncated");
             ch = input.charAt(pos);
             while (ch != '\'') {
                 if (ch == '\\') {
@@ -219,25 +219,24 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
                 linePos--;
             }
             token.type = ch == '(' ? Token.TokenType.FUNCTION : Token.TokenType.VARIABLE;
-        } else if (ch == '(' || ch == ')' || ch == ',') {
-            if (ch == '(') {
-                token.type = Token.TokenType.OPEN_PAREN;
-            } else if (ch == ')') {
-                token.type = Token.TokenType.CLOSE_PAREN;
-            } else {
-                token.type = Token.TokenType.COMMA;
-            }
+        } else if (ch == '(' || ch == ')' || ch == ',' || ch == '{' || ch == '}' || ch == '[' || ch == ']') {
+            token.type = switch (ch){
+                case '(' -> Token.TokenType.OPEN_PAREN;
+                case ')' -> Token.TokenType.CLOSE_PAREN;
+                case ',' -> Token.TokenType.COMMA;
+                default -> Token.TokenType.MARKER;
+            };
             token.append(ch);
             pos++;
             linePos++;
-            if (expression != null && previousToken != null && previousToken.type == Token.TokenType.OPERATOR &&
-                    (ch == ')' || ch == ',')) {
-                if (previousToken.surface.equalsIgnoreCase(";"))
-                    throw new ExpressionException(this.expression, previousToken,
-                            "Cannot have semicolon at the end of the expression");
+
+            if (expression != null && previousToken != null &&
+                    previousToken.type == Token.TokenType.OPERATOR &&
+                    (ch == ')' || ch == ',' || ch == ']' || ch == '}') &&
+                    !previousToken.surface.equalsIgnoreCase(";")
+            )
                 throw new ExpressionException(this.expression, previousToken,
                         "Can't have operator " + previousToken.surface + " at the end of a subexpression");
-            }
         } else {
             StringBuilder greedyMatch = new StringBuilder();
             int initialPos = pos;
@@ -254,7 +253,6 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
                         ch = input.charAt(pos++);
                         linePos++;
                         greedyMatch.append(ch);
-
                     }
                     if (ch == '\n') {
                         lineNo++;
@@ -287,7 +285,9 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
             }
 
             if (previousToken == null || previousToken.type == Token.TokenType.OPERATOR
-                    || previousToken.type == Token.TokenType.OPEN_PAREN || previousToken.type == Token.TokenType.COMMA) {
+                    || previousToken.type == Token.TokenType.OPEN_PAREN || previousToken.type == Token.TokenType.COMMA
+                    || (previousToken.type == Token.TokenType.MARKER && (previousToken.surface.equals("{") || previousToken.surface.equals("[")))
+            ) {
                 token.surface += "u";
                 token.type = Token.TokenType.UNARY_OPERATOR;
             } else {
@@ -300,12 +300,14 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
                                 token.type == Token.TokenType.HEX_LITERAL ||
                                 token.type == Token.TokenType.VARIABLE ||
                                 token.type == Token.TokenType.STRING ||
+                                (token.type == Token.TokenType.MARKER && (previousToken.surface.equalsIgnoreCase("{") || previousToken.surface.equalsIgnoreCase("["))) ||
                                 token.type == Token.TokenType.FUNCTION
                 ) && (
                 previousToken.type == Token.TokenType.VARIABLE ||
                         previousToken.type == Token.TokenType.FUNCTION ||
                         previousToken.type == Token.TokenType.LITERAL ||
                         previousToken.type == Token.TokenType.CLOSE_PAREN ||
+                        (previousToken.type == Token.TokenType.MARKER && (previousToken.surface.equalsIgnoreCase("}") || previousToken.surface.equalsIgnoreCase("]"))) ||
                         previousToken.type == Token.TokenType.HEX_LITERAL ||
                         previousToken.type == Token.TokenType.STRING
         )
