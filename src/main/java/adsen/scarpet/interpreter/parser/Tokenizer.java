@@ -4,8 +4,11 @@ import adsen.scarpet.interpreter.parser.exception.ExpressionException;
 import adsen.scarpet.interpreter.parser.exception.InternalExpressionException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Expression tokenizer that allows to iterate over a {@link String}
@@ -53,6 +56,11 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
         return res;
     }
 
+    private static boolean isSemicolon(Token tok) {
+        return (tok.type == Token.TokenType.OPERATOR && tok.surface.equals(";"))
+                || (tok.type == Token.TokenType.UNARY_OPERATOR && tok.surface.equals(";u"));
+    }
+
     @Override
     public boolean hasNext() {
         return (pos < input.length());
@@ -70,6 +78,42 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
     private boolean isHexDigit(char ch) {
         return ch == 'x' || ch == 'X' || (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f')
                 || (ch >= 'A' && ch <= 'F');
+    }
+
+    public List<Token> postProcess() {
+        Iterable<Token> iterable = () -> this;
+        List<Token> originalTokens = StreamSupport.stream(iterable.spliterator(), false).collect(Collectors.toList());
+        List<Token> cleanedTokens = new ArrayList<>();
+        Token last = null;
+        while (originalTokens.size() > 0) {
+            Token current = originalTokens.remove(originalTokens.size() - 1);
+            if (current.type == Token.TokenType.MARKER && current.surface.startsWith("//"))// skipping comments
+                continue;
+            if (!isSemicolon(current) || (last != null && last.type != Token.TokenType.CLOSE_PAREN &&
+                    last.type != Token.TokenType.COMMA && !isSemicolon(last))) {
+                if (isSemicolon(current)) {
+                    current.surface = ";";
+                    current.type = Token.TokenType.OPERATOR;
+                }
+                if (current.type == Token.TokenType.MARKER) {
+                    // dealing with tokens in reversed order
+                    if ("{".equals(current.surface)) {
+                        cleanedTokens.add(current.morphedInto(Token.TokenType.OPEN_PAREN, "("));
+                        current.morph(Token.TokenType.FUNCTION, "m");
+                    } else if ("[".equals(current.surface)) {
+                        cleanedTokens.add(current.morphedInto(Token.TokenType.OPEN_PAREN, "("));
+                        current.morph(Token.TokenType.FUNCTION, "l");
+                    } else if ("}".equals(current.surface) || "]".equals(current.surface)) {
+                        current.morph(Token.TokenType.CLOSE_PAREN, ")");
+                    }
+                }
+                cleanedTokens.add(current);
+            }
+            if (!(current.type == Token.TokenType.MARKER && current.surface.equals("$")))
+                last = current;
+        }
+        Collections.reverse(cleanedTokens);
+        return cleanedTokens;
     }
 
     @Override
@@ -97,10 +141,8 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
         if (Character.isDigit(ch) || (ch == decimalSeparator && Character.isDigit(peekNextChar()))) {
             if (ch == '0' && (peekNextChar() == 'x' || peekNextChar() == 'X'))
                 isHex = true;
-            while ((isHex
-                    && isHexDigit(
-                    ch))
-                    || (Character.isDigit(ch) || ch == decimalSeparator || ch == 'e' || ch == 'E'
+            while ((isHex && isHexDigit(ch)) ||
+                    (Character.isDigit(ch) || ch == decimalSeparator || ch == 'e' || ch == 'E'
                     || (ch == minusSign && token.length() > 0
                     && ('e' == token.charAt(token.length() - 1)
                     || 'E' == token.charAt(token.length() - 1)))
@@ -188,7 +230,8 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
             token.append(ch);
             pos++;
             linePos++;
-            if (expression != null && previousToken != null && previousToken.type == Token.TokenType.OPERATOR && (ch == ')' || ch == ',')) {
+            if (expression != null && previousToken != null && previousToken.type == Token.TokenType.OPERATOR &&
+                    (ch == ')' || ch == ',')) {
                 if (previousToken.surface.equalsIgnoreCase(";"))
                     throw new ExpressionException(this.expression, previousToken,
                             "Cannot have semicolon at the end of the expression");
@@ -267,7 +310,8 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
                         previousToken.type == Token.TokenType.STRING
         )
         ) {
-            throw new ExpressionException(this.expression, previousToken, "'" + token.surface + "' is not allowed after '" + previousToken.surface + "'");
+            throw new ExpressionException(this.expression, previousToken, "'" + token.surface +
+                    "' is not allowed after '" + previousToken.surface + "'");
         }
         return previousToken = token;
     }
@@ -298,6 +342,21 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
 
         public int length() {
             return surface.length();
+        }
+
+        public Token morphedInto(TokenType newType, String newSurface) {
+            Token created = new Token();
+            created.surface = newSurface;
+            created.type = newType;
+            created.pos = pos;
+            created.linePos = linePos;
+            created.lineNo = lineNo;
+            return created;
+        }
+
+        public void morph(TokenType type, String s) {
+            this.type = type;
+            this.surface = s;
         }
 
         @Override

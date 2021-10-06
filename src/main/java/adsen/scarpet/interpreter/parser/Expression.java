@@ -80,9 +80,7 @@ public class Expression implements Cloneable {
     public Expression(String expression, boolean comments, boolean newLineMarkers) {
         this.expression = expression.trim().
                 replaceAll("\\r\\n?", "\n").
-                replaceAll(";+$", "").
-                replaceAll("\\{", "m(").
-                replaceAll("\\[", "l(");
+                replaceAll(";+$", "");
 
         allowComments = comments;
         allowNewLineMarkers = newLineMarkers;
@@ -393,16 +391,11 @@ public class Expression implements Cloneable {
         Stack<Tokenizer.Token> stack = new Stack<>();
 
         Tokenizer tokenizer = new Tokenizer(this, expression, allowComments, allowNewLineMarkers);
+        List<Tokenizer.Token> cleanedTokens = tokenizer.postProcess();
 
         Tokenizer.Token lastFunction = null;
         Tokenizer.Token previousToken = null;
-        while (tokenizer.hasNext()) {
-            Tokenizer.Token token;
-            try {
-                token = tokenizer.next();
-            } catch (StringIndexOutOfBoundsException e) {
-                throw new ExpressionException("Script ended prematurely");
-            }
+        for (Tokenizer.Token token : cleanedTokens) {
             switch (token.type) {
                 case STRING, LITERAL, HEX_LITERAL -> {
                     if (previousToken != null && (
@@ -545,9 +538,7 @@ public class Expression implements Cloneable {
     }
 
     Value eval(Context c) {
-        if (ast == null) {
-            ast = getAST();
-        }
+        ast = getAST();
         return evalValue(() -> ast, c, Context.NONE);
     }
 
