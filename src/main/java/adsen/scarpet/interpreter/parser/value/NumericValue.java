@@ -118,7 +118,7 @@ public class NumericValue extends Value {
         if (v instanceof NumericValue) {
             return new NumericValue(getDouble() * ((NumericValue) v).getDouble());
         }
-        if (v instanceof ListValue) {
+        if (v instanceof ListValue || v instanceof MatrixValue) {
             return v.multiply(this);
         }
         return new StringValue(StringUtils.repeat(v.getString(), (int) getLong()));

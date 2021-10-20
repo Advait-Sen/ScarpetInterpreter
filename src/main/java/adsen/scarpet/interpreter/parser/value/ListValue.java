@@ -1,6 +1,7 @@
 package adsen.scarpet.interpreter.parser.value;
 
 import adsen.scarpet.interpreter.parser.exception.InternalExpressionException;
+import adsen.scarpet.interpreter.parser.util.Matrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,6 +45,26 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
         return (int) idx;
     }
 
+    /**
+     * Checks if all items are numbers
+     */
+    public boolean canBeVector() {
+        return items.stream().allMatch(v -> v instanceof NumericValue);
+    }
+
+    /**
+     * Makes a n*1 vector out of this list, throwing an error if you can't. Use {@link ListValue#canBeVector()} to check
+     */
+    public MatrixValue toVector() {
+        if (!canBeVector())
+            throw new InternalExpressionException("Cannot be a vector");
+        double[][] vec = new double[1][items.size()];
+        for (int i = 0; i < items.size(); i++) {
+            vec[0][i] = ((NumericValue) items.get(i)).getDouble();
+        }
+        return new MatrixValue(vec);
+    }
+
     @Override
     public String getString() {
         return "[" + items.stream().map(Value::getString).collect(Collectors.joining(", ")) + "]";
@@ -84,6 +105,8 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
             } else {
                 throw new InternalExpressionException("Cannot subtract two lists of uneven sizes");
             }
+        } else if (other instanceof MatrixValue) {
+            return other.add(this);
         } else {
             for (Value v : items) {
                 output.items.add(v.add(other));
@@ -107,6 +130,8 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
             } else {
                 throw new InternalExpressionException("Cannot subtract two lists of uneven sizes");
             }
+        } else if (other instanceof MatrixValue) {
+            return other.subtract(this);
         } else {
             for (Value v : items) {
                 output.items.add(v.subtract(other));
@@ -131,6 +156,11 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
             } else {
                 throw new InternalExpressionException("Cannot subtract two lists of uneven sizes");
             }
+        } else if (other instanceof MatrixValue) {
+            if (!canBeVector())
+                throw new InternalExpressionException("Cannot multiply matrix value with non-matrix value");
+            MatrixValue mv = toVector();
+            return mv.multiply(other);
         } else {
             for (Value v : items) {
                 output.items.add(v.multiply(other));
@@ -150,6 +180,8 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
             } else {
                 throw new InternalExpressionException("Cannot subtract two lists of uneven sizes");
             }
+        } else if (other instanceof MatrixValue) {
+            throw new InternalExpressionException("Unsupported operation (so far...)");//todo matrix inversion
         } else {
             for (Value v : items) {
                 output.items.add(v.divide(other));

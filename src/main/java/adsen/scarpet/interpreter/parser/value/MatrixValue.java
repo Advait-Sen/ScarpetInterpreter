@@ -46,6 +46,10 @@ public class MatrixValue extends Value implements ContainerValueInterface {
         }
     }
 
+    public MatrixValue(double[][] mat) {
+        this.matrix = new Matrix(mat);
+    }
+
     @Override
     public String getString() {
         return matrix.toString();
@@ -66,8 +70,8 @@ public class MatrixValue extends Value implements ContainerValueInterface {
         if (o instanceof MatrixValue) {
             return new MatrixValue(matrix.add(((MatrixValue) o).matrix));
         }
-        if (o instanceof ListValue) {//todo check for vectors
-            return NULL;
+        if (o instanceof ListValue && ((ListValue)o).canBeVector()) {
+            return new MatrixValue(matrix.add(((ListValue) o).toVector().matrix));
         }
         throw new InternalExpressionException("Cannot add non-matrix or vector value to a matrix");
     }
@@ -77,8 +81,8 @@ public class MatrixValue extends Value implements ContainerValueInterface {
         if (o instanceof MatrixValue) {
             return new MatrixValue(matrix.subtract(((MatrixValue) o).matrix));
         }
-        if (o instanceof ListValue) {//todo check for vectors
-            return NULL;
+        if (o instanceof ListValue && ((ListValue)o).canBeVector()) {
+            return new MatrixValue(matrix.subtract(((ListValue) o).toVector().matrix));
         }
         throw new InternalExpressionException("Cannot subtract non-matrix or vector value from a matrix");
     }
@@ -88,8 +92,8 @@ public class MatrixValue extends Value implements ContainerValueInterface {
         if (o instanceof MatrixValue) {
             return new MatrixValue(matrix.multiply(((MatrixValue) o).matrix));
         }
-        if (o instanceof ListValue) {//todo check for vectors
-            return NULL;
+        if (o instanceof ListValue && ((ListValue)o).canBeVector()) {
+            return new MatrixValue(matrix.multiply(((ListValue) o).toVector().matrix));
         }
         if (o instanceof NumericValue) {
             return new MatrixValue(matrix.multiply(((NumericValue) o).getDouble()));
