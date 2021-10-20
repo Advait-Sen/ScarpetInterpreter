@@ -1,6 +1,7 @@
 package adsen.scarpet.interpreter;
 
 import adsen.scarpet.interpreter.parser.Expression;
+import adsen.scarpet.interpreter.parser.util.Matrix;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 
