@@ -82,23 +82,41 @@ public class Matrix implements Collection<Double> {
     //Matrix operations
 
     /**
-     * Adds the values of another matrix to those of this one
+     * Adds the values of another matrix to those of this one, and returns the answer as a new matrix.
      */
-    public void add(Matrix other) {
+    public Matrix add(Matrix other) {
         if (other.M != M || other.N != N) throw new IndexOutOfBoundsException("Cannot add matrices of uneven sizes");
 
-        iterate((m, n, v) -> v + other.get(m, n));
+        Matrix output = new Matrix(values);
+
+        output.iterate((m, n, v) -> v + other.get(m, n));
+        return output;
     }
 
     /**
-     * Subtracts the values of another matrix from those of this one
+     * Subtracts the values of another matrix from those of this one, and returns the answer as a new matrix.
      */
-    public void subtract(Matrix other) {
+    public Matrix subtract(Matrix other) {
         if (other.M != M || other.N != N) throw new IndexOutOfBoundsException("Cannot add matrices of uneven sizes");
 
-        iterate((m, n, v) -> v - other.get(m, n));
+        Matrix output = new Matrix(values);
+
+        output.iterate((m, n, v) -> v - other.get(m, n));
+        return output;
     }
 
+    /**
+     * Multiplies this matrix with a scalar
+     */
+    public Matrix multiply(double other) {
+        Matrix output = new Matrix(values);
+        output.iterate((m, n, v) -> v*other);
+        return output;
+    }
+
+    /**
+     * Matrix multiplication
+     */
     public Matrix multiply(Matrix other) {
         if (other.N != M)
             throw new IndexOutOfBoundsException("When multiplying, the first matrix must have the same number of columns as the second's rows");
