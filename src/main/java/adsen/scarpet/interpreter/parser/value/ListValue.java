@@ -181,7 +181,10 @@ public class ListValue extends AbstractListValue implements ContainerValueInterf
                 throw new InternalExpressionException("Cannot subtract two lists of uneven sizes");
             }
         } else if (other instanceof MatrixValue) {
-            throw new InternalExpressionException("Unsupported operation (so far...)");//todo matrix inversion
+            if (!canBeVector())
+                throw new InternalExpressionException("Cannot multiply matrix value with non-matrix value");
+            MatrixValue mv = toVector();
+            return mv.divide(other);
         } else {
             for (Value v : items) {
                 output.items.add(v.divide(other));

@@ -43,6 +43,11 @@ public class LoopsAndHigherOrderFunctions {
 
         expression.addFunction("matrix", lv -> new MatrixValue(ListValue.wrap(lv)));
 
+        expression.addUnaryFunction("transpose", v->{
+            if(!(v instanceof MatrixValue)) throw new InternalExpressionException("Can only transpose a matrix");
+            return new MatrixValue(((MatrixValue) v).getMatrix().transpose());
+        });
+
         expression.addFunction("join", (lv) -> {
             if (lv.size() < 2)
                 throw new InternalExpressionException("join takes at least 2 arguments");

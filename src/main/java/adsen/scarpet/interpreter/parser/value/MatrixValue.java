@@ -50,6 +50,10 @@ public class MatrixValue extends Value implements ContainerValueInterface {
         this.matrix = new Matrix(mat);
     }
 
+    public Matrix getMatrix(){
+        return matrix;
+    }
+
     @Override
     public String getString() {
         return matrix.toString();
@@ -103,7 +107,16 @@ public class MatrixValue extends Value implements ContainerValueInterface {
 
     @Override
     public Value divide(Value o) {//todo getting inverses to divide a number by this
-        throw new InternalExpressionException("Unsupported operation (so far...)");
+        if (o instanceof MatrixValue) {
+            return new MatrixValue(matrix.divide(((MatrixValue) o).matrix));
+        }
+        if (o instanceof ListValue && ((ListValue)o).canBeVector()) {
+            return new MatrixValue(matrix.divide(((ListValue) o).toVector().matrix));
+        }
+        if (o instanceof NumericValue) {
+            return new MatrixValue(matrix.multiply(1.0D/((NumericValue) o).getDouble()));
+        }
+        throw new InternalExpressionException("Cannot divide non-matrix, vector or scalar value by a matrix");
     }
 
     @Override

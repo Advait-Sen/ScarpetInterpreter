@@ -30,6 +30,7 @@ public class Matrix implements Collection<Double> {
         this.N = values.length;
     }
 
+    //Matrix operations
     /**
      * Gives an identity matrix of a given size
      */
@@ -45,7 +46,7 @@ public class Matrix implements Collection<Double> {
      * Sets a given value at a given position.
      *
      * @return The old value at this position
-     * @throws IndexOutOfBoundsException if x or y is greater than M or N size of this matrix or negative
+     * @throws ArithmeticException() if x or y is greater than M or N size of this matrix or negative
      */
     public double set(int x, int y, double newValue) {
         double oldValue = values[y][x];
@@ -57,7 +58,7 @@ public class Matrix implements Collection<Double> {
      * Returns the value at a given coordinate
      *
      * @return The value at this position
-     * @throws IndexOutOfBoundsException if x or y is greater than M or N size of this matrix or negative
+     * @throws ArithmeticException() if x or y is greater than M or N size of this matrix or negative
      */
     public double get(int x, int y) {
         return values[y][x];
@@ -79,13 +80,11 @@ public class Matrix implements Collection<Double> {
         }
     }
 
-    //Matrix operations
-
     /**
      * Adds the values of another matrix to those of this one, and returns the answer as a new matrix.
      */
     public Matrix add(Matrix other) {
-        if (other.M != M || other.N != N) throw new IndexOutOfBoundsException("Cannot add matrices of uneven sizes");
+        if (other.M != M || other.N != N) throw new ArithmeticException("Cannot add matrices of uneven sizes");
 
         Matrix output = new Matrix(values);
 
@@ -97,7 +96,7 @@ public class Matrix implements Collection<Double> {
      * Subtracts the values of another matrix from those of this one, and returns the answer as a new matrix.
      */
     public Matrix subtract(Matrix other) {
-        if (other.M != M || other.N != N) throw new IndexOutOfBoundsException("Cannot add matrices of uneven sizes");
+        if (other.M != M || other.N != N) throw new ArithmeticException("Cannot add matrices of uneven sizes");
 
         Matrix output = new Matrix(values);
 
@@ -110,7 +109,7 @@ public class Matrix implements Collection<Double> {
      */
     public Matrix multiply(double other) {
         Matrix output = new Matrix(values);
-        output.iterate((m, n, v) -> v*other);
+        output.iterate((m, n, v) -> v * other);
         return output;
     }
 
@@ -119,7 +118,7 @@ public class Matrix implements Collection<Double> {
      */
     public Matrix multiply(Matrix other) {
         if (other.N != M)
-            throw new IndexOutOfBoundsException("When multiplying, the first matrix must have the same number of columns as the second's rows");
+            throw new ArithmeticException("When multiplying, the first matrix must have the same number of columns as the second's rows");
         Matrix output = new Matrix(other.M, N);
         output.iterate((m, n, v) -> {
             double ret = 0.0D;
@@ -132,6 +131,98 @@ public class Matrix implements Collection<Double> {
         return output;
     }
 
+    /**
+     * Multiplies with the inverse
+     */
+    public Matrix divide(Matrix other){
+        if (!(isSquare() && other.isSquare() && M==other.M))
+            throw new ArithmeticException("When dividing, both matrices must be square matrices of the same dimension");
+
+        return multiply(other.inverse());
+    }
+
+    /**
+     * https://gist.github.com/hallazzang/4e6abbb05ff2d3e168a87cf10691c4fb
+     */
+    private static double _determinant(Matrix matrix) {
+        if (matrix.M == 1) {
+            return matrix.values[0][0];
+        } else if (matrix.M == 2) {
+            return matrix.values[0][0] * matrix.values[1][1] - matrix.values[0][1] * matrix.values[1][0];
+        } else {
+            double result = 0.0;
+
+            for (int col = 0; col < matrix.M; ++col) {
+                Matrix sub = matrix.subMatrix( 1, col + 1);
+
+                result += (Math.pow(-1, 1 + col + 1) * matrix.values[0][col] * _determinant(sub));
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * https://gist.github.com/hallazzang/4e6abbb05ff2d3e168a87cf10691c4fb
+     */
+    public Matrix subMatrix(int excludedRow, int excludedCol) {
+        Matrix result = new Matrix(N - 1, M - 1);
+
+        for (int row = 0, p = 0; row < N; ++row) {
+            if (row != excludedRow - 1) {
+                for (int col = 0, q = 0; col < M; ++col) {
+                    if (col != excludedCol - 1) {
+                        result.values[p][q] = values[row][col];
+                        ++q;
+                    }
+                }
+                ++p;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * https://gist.github.com/hallazzang/4e6abbb05ff2d3e168a87cf10691c4fb
+     */
+    public double determinant() {
+        if (!isSquare()) throw new ArithmeticException("Cannot have determinant of a non-square matrix");
+        return _determinant(this);
+    }
+
+    /**
+     * https://gist.github.com/hallazzang/4e6abbb05ff2d3e168a87cf10691c4fb
+     */
+    public Matrix inverse() {
+        double det = determinant();
+
+        if (det == 0.0) return null;
+
+        Matrix result = new Matrix(M, N);
+
+        for (int m = 0; m < M; ++m) {
+            for (int n = 0; n < N; ++n) {
+                Matrix sub = subMatrix(m + 1, n + 1);
+
+                result.values[n][m] = (1.0 / det * Math.pow(-1, m + n) * _determinant(sub));
+            }
+        }
+
+        return result;
+    }
+
+    public boolean isSquare() {
+        return M == N;
+    }
+
+    public Matrix transpose() {
+        Matrix result = new Matrix(N, M);
+
+        result.iterate((m, n, v) -> get(n, m));
+
+        return result;
+    }
     //Other Java stuff
 
     @Override
@@ -154,7 +245,7 @@ public class Matrix implements Collection<Double> {
                 strVals[n][m] = strVal + "0".repeat(maxStrLength - strVal.length());
             }
         }
-        for(String[] row : strVals){
+        for (String[] row : strVals) {
             sb.append(Arrays.toString(row)).append('\n');
         }
         return sb.toString();
