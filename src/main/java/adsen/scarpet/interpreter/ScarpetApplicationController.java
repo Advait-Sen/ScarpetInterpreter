@@ -19,6 +19,7 @@ public class ScarpetApplicationController {
             new Expression(script, true, false).displayOutput(s -> scriptOutputArea.appendText(s + '\n'));
         } catch (Throwable e) {
             scriptOutputArea.appendText(e.getMessage());
+            e.printStackTrace();
         }
         scriptOutputArea.appendText("Finished interpreting!");
     }

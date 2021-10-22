@@ -197,7 +197,7 @@ public class Matrix implements Collection<Double> {
     public Matrix inverse() {
         double det = determinant();
 
-        if (det == 0.0) return null;
+        if (det == 0.0) throw new ArithmeticException("Cannot get inverse with 0 determinant");
 
         Matrix result = new Matrix(M, N);
 
