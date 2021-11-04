@@ -8,5 +8,7 @@ Seeing its potential as more than just a cool and underused feature in a video g
 a tool for making easy APIs. The idea is that you add this package into your project, and can then use it as an API language,
 as it is a scripting tool that can be used to do cool things with your API while using simple and easy-flowing syntax.
 
+To be completely honest though, the main reason for this is the idea of a cool project which teaches me about how languages work.
+
 ## API stuff
 todo
