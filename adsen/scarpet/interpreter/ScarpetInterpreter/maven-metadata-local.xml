@@ -3,10 +3,11 @@
   <groupId>adsen.scarpet.interpreter</groupId>
   <artifactId>ScarpetInterpreter</artifactId>
   <versioning>
-    <release>0.0.0</release>
+    <release>0.1.0</release>
     <versions>
       <version>0.0.0</version>
+      <version>0.1.0</version>
     </versions>
-    <lastUpdated>20210828103434</lastUpdated>
+    <lastUpdated>20211110134259</lastUpdated>
   </versioning>
 </metadata>
