@@ -18,7 +18,7 @@ import java.util.Map;
 public class Operators {
 
 
-    public static final Map<String, Integer> precedence = new HashMap<>() {{
+    public static final Map<String, Integer> precedence = new HashMap() {{
         put("unary+-!", 60);
         put("exponent**", 40);
         put("multiplication*/%", 30);
@@ -202,7 +202,8 @@ public class Operators {
         expression.addLazyBinaryOperatorWithDelegation("->", Operators.precedence.get("def->"), false, (c, type, e, t, lv1, lv2) ->
         {
             Value v1 = lv1.evalValue(c, Context.SIGNATURE);
-            if (v1 instanceof FunctionSignatureValue sign) {
+            if (v1 instanceof FunctionSignatureValue) {
+                FunctionSignatureValue sign = (FunctionSignatureValue) v1;
                 expression.addContextFunction(c, sign.getName(), e, t, sign.getArgs(), sign.getGlobals(), lv2);
             } else {
                 v1.assertAssignable();

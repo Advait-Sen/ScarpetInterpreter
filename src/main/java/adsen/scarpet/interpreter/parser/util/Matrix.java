@@ -271,7 +271,7 @@ public class Matrix implements Collection<Double> {
 
     @Override
     public Iterator<Double> iterator() {
-        return new Iterator<>() {
+        return new Iterator<Double>() {
             int x = 0;
             int y = 0;
 

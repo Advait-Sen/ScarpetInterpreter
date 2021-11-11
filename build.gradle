@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'adsen.scarpet.interpreter'
-version '0.1.0'
+version '0.1.1'
 
 repositories {
     mavenCentral()
@@ -15,8 +15,8 @@ ext {
     junitVersion = '5.7.2'
 }
 
-sourceCompatibility = '16'
-targetCompatibility = '16'
+sourceCompatibility = '8'
+targetCompatibility = '8'
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'

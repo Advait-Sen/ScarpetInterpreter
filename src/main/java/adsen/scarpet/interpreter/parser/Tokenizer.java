@@ -220,12 +220,16 @@ public class Tokenizer implements Iterator<Tokenizer.Token> {
             }
             token.type = ch == '(' ? Token.TokenType.FUNCTION : Token.TokenType.VARIABLE;
         } else if (ch == '(' || ch == ')' || ch == ',' || ch == '{' || ch == '}' || ch == '[' || ch == ']') {
-            token.type = switch (ch){
-                case '(' -> Token.TokenType.OPEN_PAREN;
-                case ')' -> Token.TokenType.CLOSE_PAREN;
-                case ',' -> Token.TokenType.COMMA;
-                default -> Token.TokenType.MARKER;
-            };
+            switch (ch) {
+                case '(':
+                    token.type = Token.TokenType.OPEN_PAREN;
+                case ')':
+                    token.type = Token.TokenType.CLOSE_PAREN;
+                case ',':
+                    token.type = Token.TokenType.COMMA;
+                default:
+                    token.type = Token.TokenType.MARKER;
+            }
             token.append(ch);
             pos++;
             linePos++;

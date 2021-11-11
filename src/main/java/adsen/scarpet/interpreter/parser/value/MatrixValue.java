@@ -119,7 +119,8 @@ public class MatrixValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean equals(Value other) {
-        if (!(other instanceof MatrixValue mo)) return false;
+        if (!(other instanceof MatrixValue)) return false;
+        MatrixValue mo = (MatrixValue) other;
         if (mo.rows() != rows() || mo.columns() != columns()) return false;
         Iterator<Double> oit = mo.matrix.iterator();
         for (Double aDouble : matrix)
@@ -130,31 +131,44 @@ public class MatrixValue extends Value implements ContainerValueInterface {
 
     @Override
     public boolean put(Value where, Value value) {
-        if (!(where instanceof ListValue lWhere) || !(lWhere.length() == 2 && lWhere.canBeVector()))
+        if (!(where instanceof ListValue)) {
             throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
-
+        }
+        ListValue pair = (ListValue) where;
+        if (pair.length() != 2 || !pair.canBeVector()) {
+            throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
+        }
         if (!(value instanceof NumericValue))
             throw new InternalExpressionException("Matrices must have numeric values");
 
-        double oldValue = matrix.set((int) lWhere.items.get(0).readInteger(), (int) lWhere.items.get(1).readInteger(), value.readNumber());
+        double oldValue = matrix.set((int) pair.items.get(0).readInteger(), (int) pair.items.get(1).readInteger(), value.readNumber());
 
         return oldValue == value.readNumber();
     }
 
     @Override
     public Value get(Value where) {
-        if (!(where instanceof ListValue lWhere) || !(lWhere.length() == 2 && lWhere.canBeVector()))
+        if (!(where instanceof ListValue)) {
             throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
-
-        return new NumericValue(matrix.get((int) lWhere.items.get(0).readInteger(), (int) lWhere.items.get(1).readInteger()));
+        }
+        ListValue pair = (ListValue) where;
+        if (pair.length() != 2 || !pair.canBeVector()) {
+            throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
+        }
+        return new NumericValue(matrix.get((int) pair.items.get(0).readInteger(), (int) pair.items.get(1).readInteger()));
     }
 
     @Override
     public boolean has(Value where) {
-        if (!(where instanceof ListValue lWhere) || !(lWhere.length() == 2 && lWhere.canBeVector()))
+        if (!(where instanceof ListValue)) {
             throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
-        int x = (int) lWhere.items.get(0).readInteger();
-        int y = (int) lWhere.items.get(1).readInteger();
+        }
+        ListValue pair = (ListValue) where;
+        if (pair.length() != 2 || !pair.canBeVector()) {
+            throw new InternalExpressionException("Must access a matrix's content with a pair of numeric coordinates");
+        }
+        int x = (int) pair.items.get(0).readInteger();
+        int y = (int) pair.items.get(1).readInteger();
         return 0 < x && rows() > x && 0 < y && y > columns();
     }
 
