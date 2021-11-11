@@ -242,7 +242,10 @@ public class Matrix implements Collection<Double> {
         for (int n = 0; n < N; n++) {
             for (int m = 0; m < M; m++) {
                 strVal = strVals[n][m];
-                strVals[n][m] = strVal + "0".repeat(maxStrLength - strVal.length());
+                for (int i = 0; i < maxStrLength - strVal.length(); i++) {
+                    strVal += "0";
+                }
+                strVals[n][m] = strVal;
             }
         }
         for (String[] row : strVals) {
