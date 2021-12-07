@@ -21,18 +21,14 @@ import adsen.scarpet.interpreter.parser.language.FunctionsAndControlFlow;
 import adsen.scarpet.interpreter.parser.language.LoopsAndHigherOrderFunctions;
 import adsen.scarpet.interpreter.parser.language.Operators;
 import adsen.scarpet.interpreter.parser.language.SystemFunctions;
-import adsen.scarpet.interpreter.parser.value.LazyListValue;
-import adsen.scarpet.interpreter.parser.value.ListValue;
 import adsen.scarpet.interpreter.parser.value.NumericValue;
 import adsen.scarpet.interpreter.parser.value.StringValue;
 import adsen.scarpet.interpreter.parser.value.Value;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,9 +38,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
-import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 

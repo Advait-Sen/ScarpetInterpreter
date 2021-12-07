@@ -123,11 +123,6 @@ public class SystemFunctions {
             return (cc, tt) -> retval;
         });
 
-        expression.addUnaryFunction("print", (v) ->
-        {
-            System.out.println(v.getString());
-            return v; // pass through for variables
-        });
         expression.addUnaryFunction("sleep", (v) ->
         {
             long time = NumericValue.asNumber(v).getLong();
