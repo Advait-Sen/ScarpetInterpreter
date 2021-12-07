@@ -115,7 +115,8 @@ public class Arithmetic {
         expression.addMathematicalUnaryFunction("coth", (d) -> 1.0 / Math.tanh(d));                // Formula: coth(x) = 1 / tanh(x)
         expression.addMathematicalUnaryFunction("asinh", (d) -> Math.log(d + (Math.sqrt(Math.pow(d, 2) + 1))));  // Formula: asinh(x) = ln(x + sqrt(x^2 + 1))
         expression.addMathematicalUnaryFunction("acosh", (d) -> Math.log(d + (Math.sqrt(Math.pow(d, 2) - 1))));  // Formula: acosh(x) = ln(x + sqrt(x^2 - 1))
-        expression.addMathematicalUnaryFunction("atanh", (d) -> {                                     // Formula: atanh(x) = 0.5*ln((1 + x)/(1 - x))
+        expression.addMathematicalUnaryFunction("atanh", (d) ->                                       // Formula: atanh(x) = 0.5*ln((1 + x)/(1 - x))
+        {
             if (Math.abs(d) > 1 || Math.abs(d) == 1)
                 throw new InternalExpressionException("Number must be |x| < 1");
             return 0.5 * Math.log((1 + d) / (1 - d));

@@ -6,7 +6,7 @@ import adsen.scarpet.interpreter.parser.util.Matrix;
 import java.util.Iterator;
 import java.util.List;
 
-public class MatrixValue extends Value implements ContainerValueInterface {
+public class   MatrixValue extends Value implements ContainerValueInterface {
 
     private Matrix matrix;
 

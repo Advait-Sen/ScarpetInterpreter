@@ -14,6 +14,7 @@ import adsen.scarpet.interpreter.parser.exception.ExitStatement;
 import adsen.scarpet.interpreter.parser.exception.ExpressionException;
 import adsen.scarpet.interpreter.parser.exception.InternalExpressionException;
 import adsen.scarpet.interpreter.parser.exception.ReturnStatement;
+import adsen.scarpet.interpreter.parser.exception.ScarpetExpressionException;
 import adsen.scarpet.interpreter.parser.exception.ThrowStatement;
 import adsen.scarpet.interpreter.parser.language.Arithmetic;
 import adsen.scarpet.interpreter.parser.language.FunctionsAndControlFlow;
@@ -42,7 +43,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class Expression implements Cloneable {
-    static Expression none = new Expression();
+    static Expression none = new Expression("null");
     /**
      * The function used to print, must accept a string, and can be use to display results however you want.
      * By default set to {@link System#out#println(String)}, so it prints to command line, but can be set to whatever you want.
@@ -53,8 +54,6 @@ public class Expression implements Cloneable {
      */
     private final Map<String, ILazyOperator> operators = new HashMap<>();
     private final Map<String, ILazyFunction> functions = new HashMap<>();
-    private final boolean allowComments;
-    private final boolean allowNewLineMarkers;
     /**
      * The current infix expression
      */
@@ -65,24 +64,13 @@ public class Expression implements Cloneable {
      */
     private LazyValue ast = null;
 
-    public Expression() {
-        this("null");
-    }
-
-    public Expression(String input) {
-        this(input, false, true);
-    }
-
     /**
-     * @param expression The String expression (i.e the code)
+     * @param expression .
      */
-    public Expression(String expression, boolean comments, boolean newLineMarkers) {
+    public Expression(String expression) {
         this.expression = expression.trim().
                 replaceAll("\\r\\n?", "\n").
                 replaceAll(";+$", "");
-
-        allowComments = comments;
-        allowNewLineMarkers = newLineMarkers;
 
         FunctionsAndControlFlow.apply(this);
         Operators.apply(this);
@@ -136,6 +124,24 @@ public class Expression implements Cloneable {
         return output;
     }
 
+    /**
+     * Prints a function to the screen, in a manner specified by {@link Expression#printFunction}
+     *
+     * @param s The string to display to the user.
+     */
+    public static void print(String s) {
+        printFunction.accept(s);
+    }
+
+    /**
+     * Allows to set the printer function which scarpet will use to display its output to.
+     *
+     * @param printerFunction A function which takes one String input (and essentially presents it to the user however you want)
+     */
+    public static void setPrintFunction(Consumer<String> printerFunction) {
+        printFunction = printerFunction;
+    }
+
     static Value evalValue(Supplier<LazyValue> exprProvider, Context c, Integer expectedType) {
         try {
             return exprProvider.get().evalValue(c, expectedType);
@@ -148,15 +154,6 @@ public class Expression implements Cloneable {
         } catch (ArithmeticException exc) {
             throw new ExpressionException("The final result is incorrect, " + exc.getMessage());
         }
-    }
-
-    /**
-     * Prints a function to the screen, in a manner specified by {@link Expression#printFunction}
-     *
-     * @param s The string to display to the user.
-     */
-    public void print(String s) {
-        printFunction.accept(s);
     }
 
     String getCodeString() {
@@ -389,16 +386,19 @@ public class Expression implements Cloneable {
         List<Tokenizer.Token> outputQueue = new ArrayList<>();
         Stack<Tokenizer.Token> stack = new Stack<>();
 
-        Tokenizer tokenizer = new Tokenizer(this, expression, allowComments, allowNewLineMarkers);
-        List<Tokenizer.Token> cleanedTokens = tokenizer.postProcess();
+        Tokenizer tokenizer = new Tokenizer(this, expression, false, true);
 
         Tokenizer.Token lastFunction = null;
         Tokenizer.Token previousToken = null;
-        for (Tokenizer.Token token : cleanedTokens) {
+        while (tokenizer.hasNext()) {
+            Tokenizer.Token token;
+            try {
+                token = tokenizer.next();
+            } catch (StringIndexOutOfBoundsException e) {
+                throw new ExpressionException("Script ended prematurely");
+            }
             switch (token.type) {
-                case STRING:
-                case LITERAL:
-                case HEX_LITERAL: {
+                case STRING, LITERAL, HEX_LITERAL -> {
                     if (previousToken != null && (
                             previousToken.type == Tokenizer.Token.TokenType.LITERAL ||
                                     previousToken.type == Tokenizer.Token.TokenType.HEX_LITERAL ||
@@ -407,13 +407,12 @@ public class Expression implements Cloneable {
                     }
                     outputQueue.add(token);
                 }
-                case VARIABLE:
-                    outputQueue.add(token);
-                case FUNCTION: {
+                case VARIABLE -> outputQueue.add(token);
+                case FUNCTION -> {
                     stack.push(token);
                     lastFunction = token;
                 }
-                case COMMA: {
+                case COMMA -> {
                     if (previousToken != null && previousToken.type == Tokenizer.Token.TokenType.OPERATOR) {
                         throw new ExpressionException(this, previousToken, "Missing parameter(s) for operator ");
                     }
@@ -428,7 +427,7 @@ public class Expression implements Cloneable {
                         }
                     }
                 }
-                case OPERATOR: {
+                case OPERATOR -> {
                     if (previousToken != null
                             && (previousToken.type == Tokenizer.Token.TokenType.COMMA || previousToken.type == Tokenizer.Token.TokenType.OPEN_PAREN)) {
                         throw new ExpressionException(this, token, "Missing parameter(s) for operator '" + token + "'");
@@ -441,7 +440,7 @@ public class Expression implements Cloneable {
                     shuntOperators(outputQueue, stack, o1);
                     stack.push(token);
                 }
-                case UNARY_OPERATOR: {
+                case UNARY_OPERATOR -> {
                     if (previousToken != null && previousToken.type != Tokenizer.Token.TokenType.OPERATOR
                             && previousToken.type != Tokenizer.Token.TokenType.COMMA && previousToken.type != Tokenizer.Token.TokenType.OPEN_PAREN) {
                         throw new ExpressionException(this, token, "Invalid position for unary operator " + token);
@@ -454,7 +453,7 @@ public class Expression implements Cloneable {
                     shuntOperators(outputQueue, stack, o1);
                     stack.push(token);
                 }
-                case OPEN_PAREN: {
+                case OPEN_PAREN -> {
                     if (previousToken != null) {
                         if (previousToken.type == Tokenizer.Token.TokenType.LITERAL || previousToken.type == Tokenizer.Token.TokenType.CLOSE_PAREN
                                 || previousToken.type == Tokenizer.Token.TokenType.VARIABLE
@@ -473,7 +472,7 @@ public class Expression implements Cloneable {
                     }
                     stack.push(token);
                 }
-                case CLOSE_PAREN: {
+                case CLOSE_PAREN -> {
                     if (previousToken != null && previousToken.type == Tokenizer.Token.TokenType.OPERATOR) {
                         throw new ExpressionException(this, previousToken, "Missing parameter(s) for operator " + previousToken);
                     }
@@ -488,7 +487,7 @@ public class Expression implements Cloneable {
                         outputQueue.add(stack.pop());
                     }
                 }
-                case MARKER: {
+                case MARKER -> {
                     if ("$".equals(token.surface)) {
                         StringBuilder sb = new StringBuilder(expression);
                         sb.setCharAt(token.pos, '\n');
@@ -521,27 +520,25 @@ public class Expression implements Cloneable {
         }
     }
 
-
-    /**
-     * Runs the script and displays the output.
-     * You can then set the printer function which scarpet will use to display its output to.
-     *
-     * @param printerFunction A function which takes one String input (and essentially presents it to the user however you want)
-     */
-    public void displayOutput(Consumer<String> printerFunction) {//Displays the output, i.e the finally evaluated expression.
-        printFunction = printerFunction;
+    public void displayOutput() {//Displays the output, i.e the finally evaluated expression.
         try {
-            printFunction.accept(eval(new Context("application window")).getString());
+            printFunction.accept(eval(Context.simpleParse()).getString());
         } catch (ExpressionException e) {
-            printFunction.accept(e.getMessage());
+            throw new ScarpetExpressionException(e.getMessage());
         } catch (ArithmeticException ae) {
-            printFunction.accept("Your math doesn't compute... " + ae.getMessage());
+            throw new ScarpetExpressionException("math doesn't compute... " + ae.getMessage());
         }
     }
 
     Value eval(Context c) {
-        ast = getAST();
-        return evalValue(() -> ast, c, Context.NONE);
+        return eval(c, Context.NONE);
+    }
+
+    private Value eval(Context c, Integer expectedType) {
+        if (ast == null) {
+            ast = getAST();
+        }
+        return evalValue(() -> ast, c, expectedType);
     }
 
     private LazyValue getAST() {
@@ -550,35 +547,34 @@ public class Expression implements Cloneable {
         validate(rpn);
         for (final Tokenizer.Token token : rpn) {
             switch (token.type) {
-                case UNARY_OPERATOR: {
+                case UNARY_OPERATOR -> {
                     final LazyValue value = stack.pop();
                     LazyValue result = (c, t) -> operators.get(token.surface).lazyEval(c, t, this, token, value, null).evalValue(c);
                     stack.push(result);
                 }
-                case OPERATOR: {
+                case OPERATOR -> {
                     final LazyValue v1 = stack.pop();
                     final LazyValue v2 = stack.pop();
                     LazyValue result = (c, t) -> operators.get(token.surface).lazyEval(c, t, this, token, v2, v1).evalValue(c);
                     stack.push(result);
                 }
-                case VARIABLE:
-                    stack.push((c, t) ->
+                case VARIABLE -> stack.push((c, t) ->
+                {
+                    if (!c.isAVariable(token.surface)) // new variable
                     {
-                        if (!c.isAVariable(token.surface)) // new variable
-                        {
-                            c.setVariable(token.surface, (cc, tt) -> Value.ZERO.reboundedTo(token.surface));
-                        }
-                        LazyValue lazyVariable = c.getVariable(token.surface);
-                        return lazyVariable.evalValue(c);
-                    });
-                case FUNCTION: {
+                        c.setVariable(token.surface, (cc, tt) -> Value.ZERO.reboundedTo(token.surface));
+                    }
+                    LazyValue lazyVariable = c.getVariable(token.surface);
+                    return lazyVariable.evalValue(c);
+                });
+                case FUNCTION -> {
                     String name = token.surface.toLowerCase(Locale.ROOT);
                     ILazyFunction f;
                     ArrayList<LazyValue> p;
                     boolean isKnown = functions.containsKey(name); // globals will be evaluated lazily, not at compile time via .
                     if (isKnown) {
                         f = functions.get(name);
-                        p = new ArrayList<>(f.numParamsFixed() ? f.getNumParams() : 0);
+                        p = new ArrayList<>(!f.numParamsVaries() ? f.getNumParams() : 0);
                     } else // potentially unknown function or just unknown function
                     {
                         f = functions.get(".");
@@ -595,23 +591,18 @@ public class Expression implements Cloneable {
                     }
                     stack.push((c, t) -> f.lazyEval(c, t, this, token, p).evalValue(c));
                 }
-                case OPEN_PAREN:
-                    stack.push(LazyValue.PARAMS_START);
-                case LITERAL:
-                    stack.push((c, t) ->
-                    {
-                        try {
-                            return new NumericValue(token.surface);
-                        } catch (NumberFormatException exception) {
-                            throw new ExpressionException(this, token, "Not a number");
-                        }
-                    });
-                case STRING:
-                    stack.push((c, t) -> new StringValue(token.surface)); // was originally null
-                case HEX_LITERAL:
-                    stack.push((c, t) -> new NumericValue(new BigInteger(token.surface.substring(2), 16).doubleValue()));
-                default:
-                    throw new ExpressionException(this, token, "Unexpected token '" + token.surface + "'");
+                case OPEN_PAREN -> stack.push(LazyValue.PARAMS_START);
+                case LITERAL -> stack.push((c, t) ->
+                {
+                    try {
+                        return new NumericValue(token.surface);
+                    } catch (NumberFormatException exception) {
+                        throw new ExpressionException(this, token, "Not a number");
+                    }
+                });
+                case STRING -> stack.push((c, t) -> new StringValue(token.surface)); // was originally null
+                case HEX_LITERAL -> stack.push((c, t) -> new NumericValue(new BigInteger(token.surface.substring(2), 16).doubleValue()));
+                default -> throw new ExpressionException(this, token, "Unexpected token '" + token.surface + "'");
             }
         }
         return stack.pop();
@@ -651,7 +642,7 @@ public class Expression implements Cloneable {
                 case FUNCTION:
                     ILazyFunction f = functions.get(token.surface.toLowerCase(Locale.ROOT));// don't validate global - userdef functions
                     int numParams = stack.pop();
-                    if (f != null && f.numParamsFixed() && numParams != f.getNumParams()) {
+                    if (f != null && !f.numParamsVaries() && numParams != f.getNumParams()) {
                         throw new ExpressionException(this, token, "Function " + token + " expected " + f.getNumParams() + " parameters, got " + numParams);
                     }
                     if (stack.size() <= 0) {

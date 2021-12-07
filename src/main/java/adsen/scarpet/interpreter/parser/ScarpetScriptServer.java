@@ -6,6 +6,7 @@ import adsen.scarpet.interpreter.parser.exception.InvalidCallbackException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -46,8 +47,10 @@ public class ScarpetScriptServer {
         }
     }
 
+
     public void setChatErrorSnooper() {
-        ExpressionException.errorSnooper = (expr, token, message) -> {
+        ExpressionException.errorSnooper = (expr, token, message) ->
+        {
             String[] lines = expr.getCodeString().split("\n");
 
             String shebang = message;
@@ -60,16 +63,16 @@ public class ScarpetScriptServer {
             if (expr.getName() != null) {
                 shebang += " in " + expr.getName() + "";
             }
-            expr.print("r " + shebang);
+            Expression.print("r " + shebang);
 
             if (lines.length > 1 && token.lineNo > 0) {
-                expr.print("l " + lines[token.lineNo - 1]);
+                Expression.print("l " + lines[token.lineNo - 1]);
             }
-            expr.print("l " + lines[token.lineNo].substring(0, token.linePos) + "r  HERE>> " + "l " +
+            Expression.print("l " + lines[token.lineNo].substring(0, token.linePos) + "r  HERE>> " + "l " +
                     lines[token.lineNo].substring(token.linePos));
 
             if (lines.length > 1 && token.lineNo < lines.length - 1) {
-                expr.print("l " + lines[token.lineNo + 1]);
+                Expression.print("l " + lines[token.lineNo + 1]);
             }
             return new ArrayList<>();
         };
@@ -77,6 +80,18 @@ public class ScarpetScriptServer {
 
     public void resetErrorSnooper() {
         ExpressionException.errorSnooper = null;
+    }
+
+    public boolean removeScriptHost(String name) {
+        name = name.toLowerCase(Locale.ROOT);
+        if (!modules.containsKey(name)) {
+            Expression.print("r No such host found: " + "wb  " + name);
+            return false;
+        }
+        // stop all events associated with name
+        modules.remove(name);
+        Expression.print("w Removed host " + name);
+        return true;
     }
 
     public boolean runas(String hostname, String udf_name, List<LazyValue> argv) {

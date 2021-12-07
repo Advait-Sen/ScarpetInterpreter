@@ -21,13 +21,6 @@ public class Context {
         this.host = host;
     }
 
-    Context(String name) {
-        this.host = new ScriptHost(name);
-    }
-
-    /**
-     * Simplest context available, used to parse command line apps
-     */
     public static Context simpleParse() {
         return new Context(new ScriptHost("command line"));
     }

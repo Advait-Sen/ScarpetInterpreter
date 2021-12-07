@@ -18,22 +18,18 @@ import java.util.Map;
 public class Operators {
 
 
-    public static final Map<String, Integer> precedence = new HashMap() {{
+    public static final Map<String, Integer> precedence = new HashMap<>() {{
         put("unary+-!", 60);
-        put("exponent**", 40);
+        put("exponent^", 40);
         put("multiplication*/%", 30);
         put("addition+-", 20);
         put("compare>=><=<", 10);
-        put("shift<<>>", 9);
-        put("equal==!=", 8);
-        put("bit-and&", 7);
-        put("bit-xor^", 6);
-        put("bit-or|", 5);
-        put("and&&", 4);
-        put("or||", 3);
-        put("assign=<>", 2);
-        put("def->", 1);
-        put("nextop;", 0);
+        put("equal==!=", 7);
+        put("and&&", 5);
+        put("or||", 4);
+        put("assign=<>", 3);
+        put("def->", 2);
+        put("nextop;", 1);
     }};
 
     public static void apply(Expression expression) {
@@ -43,20 +39,8 @@ public class Operators {
         expression.addBinaryOperator("/", precedence.get("multiplication*/%"), true, Value::divide);
         expression.addBinaryOperator("%", precedence.get("multiplication*/%"), true, (v1, v2) ->
                 new NumericValue(NumericValue.asNumber(v1).getDouble() % NumericValue.asNumber(v2).getDouble()));
-        expression.addBinaryOperator("^", precedence.get("exponent**"), false, (v1, v2) ->
+        expression.addBinaryOperator("^", precedence.get("exponent^"), false, (v1, v2) ->
                 new NumericValue(Math.pow(NumericValue.asNumber(v1).getDouble(), NumericValue.asNumber(v2).getDouble())));
-
-        expression.addBinaryOperator("<<", precedence.get("shift<<>>"), false, (v1, v2) ->
-                new NumericValue(NumericValue.asNumber(v1).getLong() << NumericValue.asNumber(v2).getLong()));
-        expression.addBinaryOperator(">>", precedence.get("shift<<>>"), false, (v1, v2) ->
-                new NumericValue(NumericValue.asNumber(v1).getLong() >> NumericValue.asNumber(v2).getLong()));
-
-        expression.addBinaryOperator("&", precedence.get("bit-and&"), false, (v1, v2) ->
-                new NumericValue(NumericValue.asNumber(v1).getLong() & NumericValue.asNumber(v2).getLong()));
-        expression.addBinaryOperator("^", precedence.get("bit-xor^"), false, (v1, v2) ->
-                new NumericValue(NumericValue.asNumber(v1).getLong() ^ NumericValue.asNumber(v2).getLong()));
-        expression.addBinaryOperator("|", precedence.get("bit-or|"), false, (v1, v2) ->
-                new NumericValue(NumericValue.asNumber(v1).getLong() | NumericValue.asNumber(v2).getLong()));
 
         expression.addLazyBinaryOperator("&&", precedence.get("and&&"), false, (c, t, lv1, lv2) ->
         {
@@ -202,8 +186,7 @@ public class Operators {
         expression.addLazyBinaryOperatorWithDelegation("->", Operators.precedence.get("def->"), false, (c, type, e, t, lv1, lv2) ->
         {
             Value v1 = lv1.evalValue(c, Context.SIGNATURE);
-            if (v1 instanceof FunctionSignatureValue) {
-                FunctionSignatureValue sign = (FunctionSignatureValue) v1;
+            if (v1 instanceof FunctionSignatureValue sign) {
                 expression.addContextFunction(c, sign.getName(), e, t, sign.getArgs(), sign.getGlobals(), lv2);
             } else {
                 v1.assertAssignable();

@@ -4,13 +4,11 @@ import adsen.scarpet.interpreter.parser.Context;
 import adsen.scarpet.interpreter.parser.Expression;
 import adsen.scarpet.interpreter.parser.LazyValue;
 import adsen.scarpet.interpreter.parser.exception.InternalExpressionException;
-import adsen.scarpet.interpreter.parser.util.Matrix;
 import adsen.scarpet.interpreter.parser.value.BooleanValue;
 import adsen.scarpet.interpreter.parser.value.ContainerValueInterface;
 import adsen.scarpet.interpreter.parser.value.LazyListValue;
 import adsen.scarpet.interpreter.parser.value.ListValue;
 import adsen.scarpet.interpreter.parser.value.MapValue;
-import adsen.scarpet.interpreter.parser.value.MatrixValue;
 import adsen.scarpet.interpreter.parser.value.NumericValue;
 import adsen.scarpet.interpreter.parser.value.StringValue;
 import adsen.scarpet.interpreter.parser.value.Value;
@@ -42,27 +40,9 @@ public class LoopsAndHigherOrderFunctions {
             return ret;
         });
 
-        expression.addFunction("matrix", lv -> new MatrixValue(ListValue.wrap(lv)));
 
-        expression.addUnaryFunction("identity", v -> new MatrixValue(Matrix.identity(NumericValue.asNumber(v).getInt())));
-
-        expression.addUnaryFunction("determinant", v -> {
-            if (!(v instanceof MatrixValue))
-                throw new InternalExpressionException("Can only get the determinant of a matrix");
-            return new NumericValue(((MatrixValue) v).getMatrix().determinant());
-        });
-
-        expression.addUnaryFunction("inverse", v -> {
-            if (!(v instanceof MatrixValue)) throw new InternalExpressionException("Can only invert a matrix");
-            return new MatrixValue(((MatrixValue) v).getMatrix().inverse());
-        });
-
-        expression.addUnaryFunction("transpose", v -> {
-            if (!(v instanceof MatrixValue)) throw new InternalExpressionException("Can only transpose a matrix");
-            return new MatrixValue(((MatrixValue) v).getMatrix().transpose());
-        });
-
-        expression.addFunction("join", (lv) -> {
+        expression.addFunction("join", (lv) ->
+        {
             if (lv.size() < 2)
                 throw new InternalExpressionException("join takes at least 2 arguments");
             String delimiter = lv.get(0).getString();

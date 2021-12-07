@@ -21,10 +21,10 @@ public class SystemFunctions {
     // %[argument_index$][flags][width][.precision][t]conversion
     private static final Pattern formatPattern = Pattern.compile("%(\\d+\\$)?([-#+ 0,(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])");
 
-    public static void apply(Expression expression) {
-        expression.addUnaryFunction("print", v -> {
+    public static void apply(Expression expression){
+        expression.addUnaryFunction("print", v-> {
             String s = v.getString();
-            expression.print(s);
+            Expression.print(s);
             return StringValue.of(s);
         });
         expression.addLazyFunction("bool", 1, (c, t, lv) -> {
@@ -46,7 +46,8 @@ public class SystemFunctions {
                 return Value.NULL;
             return new NumericValue(v.readNumber());
         });
-        expression.addFunction("str", lv -> {
+        expression.addFunction("str", lv ->
+        {
             if (lv.size() == 0)
                 throw new InternalExpressionException("str requires at least one argument");
             String format = lv.get(0).getString();
@@ -132,10 +133,9 @@ public class SystemFunctions {
             }
             return v; // pass through for variables
         });
-
         expression.addLazyFunction("time", 0, (c, t, lv) ->
         {
-            Value time = new NumericValue((System.nanoTime() * 1000) / 1000.0);
+            Value time = new NumericValue((System.nanoTime() / 1000) / 1000.0);
             return (cc, tt) -> time;
         });
 
@@ -166,6 +166,7 @@ public class SystemFunctions {
             }
             return (cc, tt) -> Value.NULL;
         });
+
 
         expression.addLazyFunction("vars", 1, (c, t, lv) -> {
             String prefix = lv.get(0).evalValue(c).getString();

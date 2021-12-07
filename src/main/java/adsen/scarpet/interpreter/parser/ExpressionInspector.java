@@ -15,9 +15,23 @@ public class ExpressionInspector {
 
     static {
         Set<String> allFunctions = (new APIExpression("null")).getExpr().getFunctionNames();
-        scarpetNativeFunctions = new HashSet<>(new Expression().getFunctionNames());
+        scarpetNativeFunctions = new HashSet<>(new Expression("null").getFunctionNames());
         allFunctions.removeIf(s -> !scarpetNativeFunctions.contains(s));
         APIFunctions = new HashSet<>(allFunctions);
+    }
+
+    /**
+     * Set of all in-built functions, so mostly maths and loops, but other stuff as well
+     */
+    public Set<String> scarpetNativeFunctions(){
+        return scarpetNativeFunctions;
+    }
+
+    /**
+     * Functions added externally, as opposed to being in-built with scarpet parser itself
+     */
+    public Set<String> APIfunctions(){
+        return APIFunctions;
     }
 
     public static List<String> Expression_getExpressionSnippet(Tokenizer.Token token, Expression expr) {
@@ -26,19 +40,5 @@ public class ExpressionInspector {
 
     public static String Expression_getName(Expression e) {
         return e.getName();
-    }
-
-    /**
-     * Set of all in-built functions, so mostly maths and loops, but other stuff as well
-     */
-    public Set<String> scarpetNativeFunctions() {
-        return scarpetNativeFunctions;
-    }
-
-    /**
-     * Functions added externally, as opposed to being in-built with scarpet parser itself
-     */
-    public Set<String> APIfunctions() {
-        return APIFunctions;
     }
 }

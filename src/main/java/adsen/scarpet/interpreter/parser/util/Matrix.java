@@ -229,23 +229,23 @@ public class Matrix implements Collection<Double> {
     public String toString() { //todo see if I can make this faster
         StringBuilder sb = new StringBuilder();
         String[][] strVals = new String[N][M];
-        String strVal;
+        StringBuilder strVal;
         int maxStrLength = 0;
         for (int n = 0; n < N; n++) { // using double for-loops to allow modifying variables
             for (int m = 0; m < M; m++) {
-                strVal = String.valueOf(get(m, n));
-                strVals[n][m] = strVal;
+                strVal = new StringBuilder(String.valueOf(get(m, n)));
+                strVals[n][m] = strVal.toString();
                 maxStrLength = Math.max(maxStrLength, strVal.length());
             }
         }
         // Now making all the numbers the same length
         for (int n = 0; n < N; n++) {
             for (int m = 0; m < M; m++) {
-                strVal = strVals[n][m];
+                strVal = new StringBuilder(strVals[n][m]);
                 for (int i = 0; i < maxStrLength - strVal.length(); i++) {
-                    strVal += "0";
+                    strVal.append("0");
                 }
-                strVals[n][m] = strVal;
+                strVals[n][m] = strVal.toString();
             }
         }
         for (String[] row : strVals) {
@@ -308,7 +308,11 @@ public class Matrix implements Collection<Double> {
 
     @Override
     public <T> T[] toArray(T[] a) {
-        Double[] arrayData = (Double[]) toArray();
+        Double[] arrayData = new Double[M * N];
+        iterate((m, n, v) -> {
+            arrayData[M * n + m] = v;
+            return v;
+        });
         if (a.length < size())
             // Make a new array of a's runtime type, but my contents:
             //noinspection unchecked
